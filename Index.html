@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedBill Academy – Medical Billing Training Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue-900:#042C53;--blue-800:#0C447C;--blue-600:#185FA5;--blue-400:#378ADD;--blue-200:#85B7EB;--blue-100:#B5D4F4;--blue-50:#E6F1FB;
+  --teal-600:#0F6E56;--teal-400:#1D9E75;--teal-100:#9FE1CB;--teal-50:#E1F5EE;
+  --green-600:#3B6D11;--green-400:#639922;--green-50:#EAF3DE;
+  --amber-600:#854F0B;--amber-400:#BA7517;--amber-50:#FAEEDA;
+  --red-600:#A32D2D;--red-400:#E24B4A;--red-50:#FCEBEB;
+  --gray-900:#2C2C2A;--gray-800:#444441;--gray-600:#5F5E5A;--gray-400:#888780;--gray-200:#B4B2A9;--gray-100:#D3D1C7;--gray-50:#F1EFE8;
+  --white:#fff;
+  --sidebar-w:240px;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6;background:#F0F4F8;color:var(--gray-900);min-height:100vh}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{min-height:600px;background:linear-gradient(135deg,var(--blue-900) 0%,var(--blue-600) 60%,var(--teal-400) 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:2rem}
+.auth-card{background:white;border-radius:16px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(4,44,83,.25)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;justify-content:center}
+.auth-logo-icon{width:40px;height:40px;background:var(--blue-600);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-size:20px}
+.auth-logo-text{font-size:20px;font-weight:700;color:var(--blue-900)}
+.auth-logo-text span{color:var(--blue-400)}
+.auth-tabs{display:flex;border-bottom:2px solid var(--gray-100);margin-bottom:1.5rem}
+.auth-tab{flex:1;padding:.6rem;text-align:center;cursor:pointer;font-size:14px;font-weight:600;color:var(--gray-400);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.auth-tab.active{color:var(--blue-600);border-bottom-color:var(--blue-600)}
+.form-group{margin-bottom:1rem}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--gray-600);margin-bottom:.4rem}
+.form-group input,.form-group select{width:100%;padding:.65rem .9rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:14px;outline:none;transition:border .2s;color:var(--gray-900);background:white}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue-400)}
+.btn-primary{width:100%;padding:.75rem;background:var(--blue-600);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-primary:hover{background:var(--blue-800)}
+.auth-demo{margin-top:1rem;padding:.75rem;background:var(--blue-50);border-radius:var(--radius);font-size:12px;color:var(--blue-800);text-align:center}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:600px}
+.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100%;background:var(--blue-900);color:white;display:flex;flex-direction:column;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sidebar-logo-icon{width:34px;height:34px;background:var(--blue-400);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sidebar-logo-text{font-size:15px;font-weight:700;line-height:1.2}
+.sidebar-logo-text small{font-size:10px;opacity:.6;font-weight:400;display:block}
+.sidebar-user{padding:.75rem 1.25rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.1)}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-400);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+.user-info{font-size:12px;line-height:1.3}
+.user-info strong{display:block;font-size:13px}
+.user-info span{opacity:.6}
+.sidebar-section{padding:.5rem 1rem .25rem;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;opacity:.4;margin-top:.5rem}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:background .15s;border-radius:0;font-size:13.5px;opacity:.75}
+.nav-item:hover{background:rgba(255,255,255,.08);opacity:1}
+.nav-item.active{background:var(--blue-400);opacity:1;font-weight:600}
+.nav-item .nav-icon{width:18px;text-align:center;font-size:16px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:1rem 1.25rem;border-top:1px solid rgba(255,255,255,.1)}
+.logout-btn{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;opacity:.7;transition:opacity .2s}
+.logout-btn:hover{opacity:1}
+
+.main-content{margin-left:var(--sidebar-w);padding:0;min-height:600px}
+.top-bar{background:white;border-bottom:1px solid var(--gray-100);padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:18px;font-weight:700;color:var(--blue-900)}
+.page-subtitle{font-size:12px;color:var(--gray-400);margin-top:1px}
+.top-bar-right{display:flex;align-items:center;gap:12px}
+.badge-points{background:var(--blue-50);color:var(--blue-800);padding:.3rem .75rem;border-radius:20px;font-size:13px;font-weight:700;border:1px solid var(--blue-100)}
+.notif-btn{width:34px;height:34px;border-radius:50%;background:var(--gray-50);border:1px solid var(--gray-100);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative}
+
+.page-body{padding:1.5rem}
+
+/* ── CARDS ── */
+.card{background:white;border-radius:var(--radius-lg);border:1px solid var(--gray-100);padding:1.25rem}
+.stat-card{padding:1rem 1.25rem}
+.stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-400);margin-bottom:.35rem}
+.stat-value{font-size:28px;font-weight:700;line-height:1}
+.stat-delta{font-size:12px;margin-top:.25rem}
+.stat-delta.up{color:var(--green-400)}
+.stat-delta.down{color:var(--red-400)}
+
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+
+/* ── PROGRESS ── */
+.progress-bar{height:8px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin:.5rem 0}
+.progress-fill{height:100%;border-radius:4px;background:var(--blue-400);transition:width .5s}
+.progress-fill.green{background:var(--teal-400)}
+.progress-fill.amber{background:var(--amber-400)}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-lg)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--gray-50);color:var(--gray-600);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1rem;text-align:left;border-bottom:1px solid var(--gray-100)}
+td{padding:.7rem 1rem;border-bottom:1px solid var(--gray-50);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--blue-50)}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:11px;font-weight:700}
+.badge-blue{background:var(--blue-50);color:var(--blue-800)}
+.badge-green{background:var(--teal-50);color:var(--teal-600)}
+.badge-amber{background:var(--amber-50);color:var(--amber-600)}
+.badge-red{background:var(--red-50);color:var(--red-600)}
+.badge-gray{background:var(--gray-50);color:var(--gray-600)}
+
+/* ── BUTTONS ── */
+.btn{padding:.55rem 1.1rem;border-radius:var(--radius);font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-sm{padding:.35rem .75rem;font-size:12.5px}
+.btn-blue{background:var(--blue-600);color:white;border-color:var(--blue-600)}
+.btn-blue:hover{background:var(--blue-800);border-color:var(--blue-800)}
+.btn-outline{background:white;color:var(--blue-600);border-color:var(--blue-200)}
+.btn-outline:hover{background:var(--blue-50)}
+.btn-green{background:var(--teal-400);color:white;border-color:var(--teal-400)}
+.btn-red{background:var(--red-400);color:white;border-color:var(--red-400)}
+.btn-amber{background:var(--amber-400);color:white;border-color:var(--amber-400)}
+
+/* ── MODULE STYLES ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:15px;font-weight:700;color:var(--blue-900)}
+
+.code-search-box{position:relative;margin-bottom:1rem}
+.code-search-box input{width:100%;padding:.7rem 1rem .7rem 2.5rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:14px;outline:none;transition:border .2s}
+.code-search-box input:focus{border-color:var(--blue-400)}
+.code-search-box .search-icon{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:16px}
+.code-result{padding:.75rem 1rem;border:1px solid var(--gray-100);border-radius:var(--radius);margin-bottom:.5rem;cursor:pointer;transition:all .2s}
+.code-result:hover{border-color:var(--blue-200);background:var(--blue-50)}
+.code-result-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.25rem}
+.code-id{font-weight:700;color:var(--blue-600);font-family:monospace;font-size:14px}
+.code-desc{font-size:13px;color:var(--gray-600);line-height:1.4}
+
+.quiz-option{padding:.75rem 1rem;border:2px solid var(--gray-100);border-radius:var(--radius);margin-bottom:.6rem;cursor:pointer;transition:all .2s;font-size:14px}
+.quiz-option:hover{border-color:var(--blue-200);background:var(--blue-50)}
+.quiz-option.selected{border-color:var(--blue-400);background:var(--blue-50);color:var(--blue-800)}
+.quiz-option.correct{border-color:var(--teal-400);background:var(--teal-50);color:var(--teal-600)}
+.quiz-option.wrong{border-color:var(--red-400);background:var(--red-50);color:var(--red-600)}
+
+.claim-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.claim-form .form-group{margin-bottom:0}
+.claim-form label{font-size:12px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:.3rem}
+.claim-form input,.claim-form select,.claim-form textarea{width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none;transition:border .2s;color:var(--gray-900);background:white}
+.claim-form input:focus,.claim-form select:focus,.claim-form textarea:focus{border-color:var(--blue-400)}
+
+.term-card{padding:1rem;border:1px solid var(--gray-100);border-radius:var(--radius);margin-bottom:.75rem;cursor:pointer;transition:all .2s}
+.term-card:hover{border-color:var(--blue-200);box-shadow:0 2px 8px rgba(55,138,221,.08)}
+.term-title{font-weight:700;color:var(--blue-900);margin-bottom:.25rem;font-size:14px}
+.term-body{font-size:13px;color:var(--gray-600);display:none}
+.term-card.open .term-body{display:block}
+.term-card.open .term-title::after{content:" ▲";font-size:10px;color:var(--gray-400)}
+.term-card:not(.open) .term-title::after{content:" ▼";font-size:10px;color:var(--gray-400)}
+
+.achievement-badge{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1rem;border:2px solid var(--gray-100);border-radius:var(--radius-lg);text-align:center;transition:all .2s}
+.achievement-badge.earned{border-color:var(--amber-400);background:var(--amber-50)}
+.achievement-badge.locked{opacity:.45}
+.badge-icon{font-size:28px;width:52px;height:52px;border-radius:50%;background:var(--blue-50);display:flex;align-items:center;justify-content:center}
+.earned .badge-icon{background:var(--amber-50)}
+.badge-name{font-size:12px;font-weight:700;color:var(--gray-800)}
+.badge-desc{font-size:11px;color:var(--gray-400)}
+
+.alert{padding:.75rem 1rem;border-radius:var(--radius);margin-bottom:1rem;font-size:13.5px;display:flex;align-items:center;gap:.6rem}
+.alert-success{background:var(--teal-50);color:var(--teal-600);border:1px solid var(--teal-100)}
+.alert-error{background:var(--red-50);color:var(--red-600);border:1px solid #F7C1C1}
+.alert-info{background:var(--blue-50);color:var(--blue-800);border:1px solid var(--blue-100)}
+.alert-warning{background:var(--amber-50);color:var(--amber-600);border:1px solid #FAC775}
+
+/* ── ADMIN ── */
+.admin-tag{display:inline-block;background:var(--red-50);color:var(--red-600);font-size:10px;font-weight:700;padding:.15rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
+
+/* ── CERTIFICATE ── */
+.cert-wrapper{border:4px solid var(--blue-200);border-radius:16px;padding:2.5rem;text-align:center;background:linear-gradient(135deg,white 0%,var(--blue-50) 100%);position:relative;overflow:hidden}
+.cert-title{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--blue-400);font-weight:700;margin-bottom:.5rem}
+.cert-name{font-size:28px;font-weight:800;color:var(--blue-900);margin-bottom:.5rem}
+.cert-course{font-size:16px;color:var(--gray-600);margin-bottom:1rem}
+.cert-seal{font-size:48px;margin:1rem 0}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:white;border-radius:var(--radius-lg);padding:1.5rem;max-width:520px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-title{font-size:16px;font-weight:700;color:var(--blue-900)}
+.modal-close{width:28px;height:28px;border-radius:50%;background:var(--gray-50);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--gray-600)}
+
+.timeline-step{display:flex;gap:1rem;margin-bottom:1rem}
+.timeline-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.dot-blue{background:var(--blue-50);color:var(--blue-600)}
+.dot-green{background:var(--teal-50);color:var(--teal-600)}
+.dot-amber{background:var(--amber-50);color:var(--amber-600)}
+.dot-red{background:var(--red-50);color:var(--red-600)}
+.timeline-content{flex:1;padding-top:.35rem}
+.timeline-label{font-size:13px;font-weight:700;color:var(--gray-800);margin-bottom:.15rem}
+.timeline-detail{font-size:12px;color:var(--gray-400)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  .sidebar{width:200px;transform:translateX(-100%);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main-content{margin-left:0}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .claim-form .form-row{grid-template-columns:1fr}
+}
+
+.tab-nav{display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--gray-100);padding-bottom:0}
+.tab-btn{padding:.5rem .9rem;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--gray-400);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn.active{color:var(--blue-600);border-bottom-color:var(--blue-600)}
+
+.hidden{display:none!important}
+
+.denial-item{padding:.9rem 1rem;border:1px solid var(--gray-100);border-radius:var(--radius);margin-bottom:.6rem;border-left:4px solid var(--red-400)}
+.denial-item.resolved{border-left-color:var(--teal-400)}
+
+.payment-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--gray-50)}
+.payment-row:last-child{border-bottom:none}
+
+.chart-wrap{position:relative;width:100%;height:200px}
+.chart-wrap-lg{position:relative;width:100%;height:260px}
+
+.pill{display:inline-block;background:var(--blue-50);color:var(--blue-800);padding:.2rem .7rem;border-radius:20px;font-size:12px;font-weight:600;margin:.2rem .1rem;cursor:pointer;transition:all .2s;border:1px solid var(--blue-100)}
+.pill:hover,.pill.active{background:var(--blue-600);color:white;border-color:var(--blue-600)}
+
+input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;background:var(--gray-100);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--blue-600);cursor:pointer}
+
+.score-ring{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .score-text{position:absolute;font-size:22px;font-weight:800;color:var(--blue-900)}
+
+.step-indicator{display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem}
+.step{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:2px solid var(--gray-100);color:var(--gray-400);flex-shrink:0}
+.step.done{background:var(--teal-400);border-color:var(--teal-400);color:white}
+.step.current{background:var(--blue-600);border-color:var(--blue-600);color:white}
+.step-line{flex:1;height:2px;background:var(--gray-100)}
+.step-line.done{background:var(--teal-400)}
+</style>
+</head>
+<body>
+
+<!-- ════ AUTH SCREEN ════ -->
+<div id="auth-screen">
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="auth-logo-icon">🏥</div>
+    <div class="auth-logo-text">MedBill<span>Academy</span></div>
+  </div>
+  <div class="auth-tabs">
+    <div class="auth-tab active" onclick="switchAuth('login')">Sign In</div>
+    <div class="auth-tab" onclick="switchAuth('register')">Register</div>
+  </div>
+  <div id="login-form">
+    <div class="form-group"><label>Email address</label><input type="email" id="login-email" value="student@medbill.edu" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-pass" value="••••••••" placeholder="Password"></div>
+    <div class="form-group">
+      <label>Login as</label>
+      <select id="login-role">
+        <option value="student">Student</option>
+        <option value="admin">Administrator</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign in to portal</button>
+    <div class="auth-demo">Demo credentials are pre-filled. Click sign in to enter.</div>
+  </div>
+  <div id="register-form" style="display:none">
+    <div class="form-group"><label>Full name</label><input type="text" placeholder="Alex Johnson"></div>
+    <div class="form-group"><label>Email</label><input type="email" placeholder="alex@example.com"></div>
+    <div class="form-group"><label>Program / School</label><input type="text" placeholder="Community College of Health Sciences"></div>
+    <div class="form-group"><label>Password</label><input type="password" placeholder="Min 8 characters"></div>
+    <button class="btn-primary" onclick="doLogin()">Create account</button>
+  </div>
+</div>
+</div>
+
+<!-- ════ APP SHELL ════ -->
+<div id="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">🏥</div>
+    <div class="sidebar-logo-text">MedBill<br><small>Academy Portal</small></div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">AJ</div>
+    <div class="user-info"><strong id="user-name">Alex Johnson</strong><span id="user-role-label">Student</span></div>
+  </div>
+
+  <div class="sidebar-section">Main</div>
+  <div class="nav-item active" onclick="navigate('dashboard')"><span class="nav-icon">🏠</span>Dashboard</div>
+  <div class="nav-item" onclick="navigate('patients')"><span class="nav-icon">👤</span>Patient Management</div>
+  <div class="nav-item" onclick="navigate('insurance')"><span class="nav-icon">🛡️</span>Insurance Verification</div>
+  <div class="nav-item" onclick="navigate('claims')"><span class="nav-icon">📋</span>Claim Creation</div>
+  <div class="nav-item" onclick="navigate('icd10')"><span class="nav-icon">🔬</span>ICD-10 Codes</div>
+  <div class="nav-item" onclick="navigate('cpt')"><span class="nav-icon">⚕️</span>CPT Codes</div>
+
+  <div class="sidebar-section">Training</div>
+  <div class="nav-item" onclick="navigate('payment')"><span class="nav-icon">💳</span>Payment Posting</div>
+  <div class="nav-item" onclick="navigate('denials')"><span class="nav-icon">🚫</span>Denial Management</div>
+  <div class="nav-item" onclick="navigate('terminology')"><span class="nav-icon">📖</span>Medical Terminology</div>
+  <div class="nav-item" onclick="navigate('quiz')"><span class="nav-icon">✏️</span>Quizzes</div>
+  <div class="nav-item" onclick="navigate('reports')"><span class="nav-icon">📊</span>My Reports</div>
+  <div class="nav-item" onclick="navigate('certificates')"><span class="nav-icon">🏆</span>Certificates</div>
+
+  <div class="sidebar-section admin-nav hidden" id="admin-section-label">Admin</div>
+  <div class="nav-item admin-nav hidden" onclick="navigate('admin')" id="admin-nav-item"><span class="nav-icon">⚙️</span>Admin Panel</div>
+
+  <div class="sidebar-footer">
+    <div class="logout-btn" onclick="doLogout()">🚪 Sign out</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="top-bar">
+    <div>
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="page-subtitle" id="page-subtitle">Welcome back, Alex</div>
+    </div>
+    <div class="top-bar-right">
+      <div class="badge-points" id="points-badge">⭐ 1,250 pts</div>
+      <div class="notif-btn" title="Notifications">🔔</div>
+    </div>
+  </div>
+
+  <div class="page-body" id="page-body"><!-- injected by JS --></div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script>
+// ══════════════════════════════
+//  APP STATE
+// ══════════════════════════════
+const state = {
+  user:{name:'Alex Johnson',role:'student',points:1250,avatar:'AJ'},
+  currentPage:'dashboard',
+  quizState:{q:0,score:0,answered:false},
+  claimStep:0,
+  charts:{}
+};
+
+function $(id){return document.getElementById(id)}
+
+// ── AUTH ──────────────────────
+function switchAuth(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));
+  $('login-form').style.display=tab==='login'?'':'none';
+  $('register-form').style.display=tab==='register'?'':'none';
+}
+function doLogin(){
+  const role=$('login-role')?$('login-role').value:'student';
+  state.user.role=role;
+  if(role==='admin'){state.user.name='Dr. Admin';state.user.avatar='DA';}
+  $('auth-screen').style.display='none';
+  $('app').style.display='block';
+  $('user-name').textContent=state.user.name;
+  $('user-avatar').textContent=state.user.avatar;
+  $('user-role-label').textContent=role==='admin'?'Administrator':'Student';
+  if(role==='admin'){
+    document.querySelectorAll('.admin-nav').forEach(e=>e.classList.remove('hidden'));
+  }
+  navigate('dashboard');
+}
+function doLogout(){
+  $('app').style.display='none';
+  $('auth-screen').style.display='flex';
+}
+
+// ── NAVIGATION ────────────────
+const pageTitles={
+  dashboard:'Dashboard',patients:'Patient Management',insurance:'Insurance Verification',
+  claims:'Claim Creation & Submission',icd10:'ICD-10 Diagnosis Codes',cpt:'CPT Procedure Codes',
+  payment:'Payment Posting',denials:'Denial Management & Appeals',terminology:'Medical Terminology',
+  quiz:'Quizzes & Assessments',reports:'Performance Reports',certificates:'Certificates',admin:'Admin Panel'
+};
+const pageSubtitles={
+  dashboard:`Welcome back, ${state.user.name}`,patients:'Manage and review practice patient records',
+  insurance:'Verify insurance eligibility and benefits',claims:'Practice creating and submitting claims',
+  icd10:'Search and learn ICD-10 diagnosis codes',cpt:'Search and learn CPT procedure codes',
+  payment:'Practice posting EOBs and payments',denials:'Practice denial resolution and appeals',
+  terminology:'Build your medical billing vocabulary',quiz:'Test your knowledge',
+  reports:'Track your learning progress',certificates:'View and download earned certificates',
+  admin:'Manage students, courses, and content'
+};
+function navigate(page){
+  state.currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.classList.toggle('active',n.getAttribute('onclick')&&n.getAttribute('onclick').includes(`'${page}'`));
+  });
+  $('page-title').textContent=pageTitles[page]||page;
+  $('page-subtitle').textContent=(pageSubtitles[page]||'').replace('Alex Johnson',state.user.name);
+  $('points-badge').textContent=`⭐ ${state.user.points.toLocaleString()} pts`;
+  const renderer={
+    dashboard:renderDashboard,patients:renderPatients,insurance:renderInsurance,
+    claims:renderClaims,icd10:renderICD10,cpt:renderCPT,payment:renderPayment,
+    denials:renderDenials,terminology:renderTerminology,quiz:renderQuiz,
+    reports:renderReports,certificates:renderCertificates,admin:renderAdmin
+  };
+  const fn=renderer[page];
+  if(fn)fn();
+  // destroy old charts
+  Object.values(state.charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  state.charts={};
+}
+
+// ══════════════════════════════
+//  PAGE RENDERERS
+// ══════════════════════════════
+function renderDashboard(){
+  $('page-body').innerHTML=`
+<div class="grid-4">
+  <div class="card stat-card"><div class="stat-label">Cases completed</div><div class="stat-value" style="color:var(--blue-600)">24</div><div class="stat-delta up">↑ 4 this week</div></div>
+  <div class="card stat-card"><div class="stat-label">Quiz average</div><div class="stat-value" style="color:var(--teal-400)">86%</div><div class="stat-delta up">↑ 3% vs last month</div></div>
+  <div class="card stat-card"><div class="stat-label">Points earned</div><div class="stat-value" style="color:var(--amber-400)">1,250</div><div class="stat-delta up">↑ 150 this week</div></div>
+  <div class="card stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--red-400)">🔥 7</div><div class="stat-delta" style="color:var(--gray-400)">days in a row</div></div>
+</div>
+<div class="grid-2">
+  <div class="card">
+    <div class="section-header"><div class="section-title">Learning progress</div><span class="badge badge-blue">6 of 10 modules</span></div>
+    ${[['Patient Management','85'],['Insurance Verification','70'],['Claim Creation','60'],['ICD-10 Coding','90'],['CPT Coding','75'],['Payment Posting','45'],['Denial Management','30']].map(([m,p])=>`
+    <div style="margin-bottom:.75rem">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:.2rem"><span>${m}</span><span style="font-weight:700;color:var(--blue-600)">${p}%</span></div>
+      <div class="progress-bar"><div class="progress-fill ${p>70?'green':p>50?'':'amber'}" style="width:${p}%"></div></div>
+    </div>`).join('')}
+  </div>
+  <div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="section-header"><div class="section-title">Activity this week</div></div>
+      <div class="chart-wrap"><canvas id="actChart" role="img" aria-label="Bar chart of daily activity points this week">Mon 40, Tue 90, Wed 60, Thu 120, Fri 80, Sat 30, Sun 50.</canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-header"><div class="section-title">Recent activity</div></div>
+      ${[['✅','Completed Claim #C-2401','2 hrs ago'],['🏆','Earned ICD-10 Explorer badge','Yesterday'],['📝','Quiz: Insurance Basics — 92%','2 days ago'],['⚠️','Denial case assigned','3 days ago']].map(([i,t,d])=>`
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--gray-50)">
+        <span style="font-size:18px">${i}</span>
+        <div><div style="font-size:13px;font-weight:600">${t}</div><div style="font-size:12px;color:var(--gray-400)">${d}</div></div>
+      </div>`).join('')}
+    </div>
+  </div>
+</div>
+<div class="grid-3">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem">Quick actions</div>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <button class="btn btn-blue" onclick="navigate('claims')" style="width:100%;justify-content:center">📋 New practice claim</button>
+      <button class="btn btn-outline" onclick="navigate('quiz')" style="width:100%;justify-content:center">✏️ Take a quiz</button>
+      <button class="btn btn-outline" onclick="navigate('icd10')" style="width:100%;justify-content:center">🔬 Search ICD-10</button>
+      <button class="btn btn-outline" onclick="navigate('denials')" style="width:100%;justify-content:center">🚫 Work denials</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem">Module scores</div>
+    <div class="chart-wrap"><canvas id="radarChart" role="img" aria-label="Radar chart of module scores across billing competencies">Scores shown for 7 billing competencies.</canvas></div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Upcoming deadlines</div>
+    ${[['Quiz: Revenue Cycle','Tomorrow','badge-red'],['Assignment: EOB Posting','Jun 20','badge-amber'],['Case Study #3','Jun 25','badge-blue'],['Final Assessment','Jul 1','badge-gray']].map(([t,d,b])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--gray-50)">
+      <div style="font-size:13px">${t}</div>
+      <span class="badge ${b}">${d}</span>
+    </div>`).join('')}
+    <div style="margin-top:1rem">
+      <div style="font-size:12px;color:var(--gray-400);margin-bottom:.5rem">Overall completion</div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <div class="score-ring">
+          <svg width="72" height="72" viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" fill="none" stroke="var(--gray-100)" stroke-width="8"/><circle cx="36" cy="36" r="30" fill="none" stroke="var(--blue-400)" stroke-width="8" stroke-dasharray="${Math.round(2*Math.PI*30*.62)} ${Math.round(2*Math.PI*30)}" stroke-linecap="round"/></svg>
+          <span class="score-text">62%</span>
+        </div>
+        <div style="font-size:13px;color:var(--gray-600)">Course<br>progress</div>
+      </div>
+    </div>
+  </div>
+</div>`;
+  setTimeout(()=>{
+    state.charts.act=new Chart($('actChart'),{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Points',data:[40,90,60,120,80,30,50],backgroundColor:'#378ADD',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{display:false}},x:{grid:{display:false}}}}});
+    state.charts.radar=new Chart($('radarChart'),{type:'radar',data:{labels:['Patients','Insurance','Claims','ICD-10','CPT','Payments','Denials'],datasets:[{label:'Score',data:[85,70,60,90,75,45,30],backgroundColor:'rgba(55,138,221,.15)',borderColor:'#378ADD',pointBackgroundColor:'#185FA5',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{beginAtZero:true,max:100,ticks:{display:false}}}}});
+  },100);
+}
+
+// ── PATIENTS ──────────────────
+const patients=[
+  {id:'P-001',name:'Margaret O\'Brien',dob:'1958-03-12',ins:'BlueCross PPO',insId:'BCB-887741',dx:'E11.9',status:'Active'},
+  {id:'P-002',name:'James Rodriguez',dob:'1975-11-28',ins:'United Healthcare',insId:'UHC-224456',dx:'M54.5',status:'Active'},
+  {id:'P-003',name:'Priya Patel',dob:'1990-07-03',ins:'Aetna HMO',insId:'AET-556123',dx:'J06.9',status:'Discharged'},
+  {id:'P-004',name:'Robert Chang',dob:'1943-01-15',ins:'Medicare Part B',insId:'MED-334789',dx:'I10',status:'Active'},
+  {id:'P-005',name:'Sandra Williams',dob:'1982-09-22',ins:'Medicaid',insId:'MCA-112234',dx:'F41.1',status:'Active'},
+];
+function renderPatients(){
+  $('page-body').innerHTML=`
+<div class="alert alert-info">📌 Practice environment — all patient records are fictional and for educational use only.</div>
+<div class="card">
+  <div class="section-header">
+    <div class="section-title">Practice patient roster</div>
+    <div style="display:flex;gap:.5rem">
+      <input style="padding:.4rem .75rem;border:1px solid var(--gray-100);border-radius:var(--radius);font-size:13px;outline:none" placeholder="🔍 Search patients..." oninput="filterPatients(this.value)">
+      <button class="btn btn-blue btn-sm" onclick="openModal('new-patient')">+ Add patient</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table id="patient-table">
+      <thead><tr><th>ID</th><th>Patient name</th><th>DOB</th><th>Insurance</th><th>Insurance ID</th><th>Primary Dx</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="patient-tbody">${renderPatientRows(patients)}</tbody>
+    </table>
+  </div>
+</div>`;
+}
+function renderPatientRows(list){
+  return list.map(p=>`<tr>
+    <td><span class="badge badge-blue">${p.id}</span></td>
+    <td style="font-weight:600">${p.name}</td>
+    <td>${p.dob}</td>
+    <td>${p.ins}</td>
+    <td style="font-family:monospace;font-size:13px">${p.insId}</td>
+    <td><span class="badge badge-gray">${p.dx}</span></td>
+    <td><span class="badge ${p.status==='Active'?'badge-green':'badge-gray'}">${p.status}</span></td>
+    <td><button class="btn btn-outline btn-sm" onclick="openModal('patient-detail','${p.id}')">View</button></td>
+  </tr>`).join('');
+}
+function filterPatients(q){
+  const filtered=patients.filter(p=>JSON.stringify(p).toLowerCase().includes(q.toLowerCase()));
+  $('patient-tbody').innerHTML=renderPatientRows(filtered);
+}
+
+// ── INSURANCE ─────────────────
+function renderInsurance(){
+  $('page-body').innerHTML=`
+<div class="grid-2">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem">Eligibility verification simulator</div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Patient name</label>
+      <select style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" id="ins-patient">
+        ${patients.map(p=>`<option value="${p.id}">${p.name} — ${p.insId}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Date of service</label>
+      <input type="date" style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" value="2025-06-18">
+    </div>
+    <div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Service type</label>
+      <select style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none">
+        <option>Outpatient / Professional</option><option>Inpatient / Facility</option><option>Emergency</option><option>Mental Health</option><option>Pharmacy</option>
+      </select>
+    </div>
+    <button class="btn btn-blue" onclick="verifyInsurance()">▶ Run eligibility check</button>
+  </div>
+  <div class="card" id="ins-result">
+    <div class="section-title" style="margin-bottom:1rem">Verification result</div>
+    <div style="color:var(--gray-400);font-size:14px;text-align:center;padding:2rem 0">Run a verification to see results</div>
+  </div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem">Common payer quick reference</div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Payer</th><th>Payer ID</th><th>Claim filing limit</th><th>Timely appeal</th><th>Auth required</th><th>Portal</th></tr></thead>
+    <tbody>
+      ${[['Medicare Part B','CMS','1 year','120 days','Selected services','Medicare.gov'],['Medicaid (State)','Various','90–180 days','60 days','Most services','State portal'],['BlueCross BlueShield','00110','180 days','180 days','Inpatient/surgery','BCBS.com'],['United Healthcare','87726','180 days','60 days','Inpatient/surgery','UHC.com'],['Aetna','60054','180 days','180 days','Surgery/MH','Aetna.com'],['Cigna','62308','180 days','180 days','Inpatient','Cigna.com']].map(r=>`<tr>${r.map((c,i)=>`<td style="${i<=1?'font-weight:600':''}${i===5?'color:var(--blue-600)':''}">${c}</td>`).join('')}</tr>`).join('')}
+    </tbody>
+  </table></div>
+</div>`;
+}
+function verifyInsurance(){
+  const pid=$('ins-patient').value;
+  const p=patients.find(x=>x.id===pid);
+  const results={
+    'P-001':{status:'Active',deductible:'$500 met of $1,500',coinsurance:'80/20',copay:'$30 PCP / $60 Specialist',oop:'$4,200 of $6,000 remaining',prior:'Not required',notes:'Member in good standing'},
+    'P-002':{status:'Active',deductible:'$2,000 met of $2,000 ✅',coinsurance:'90/10 after deductible',copay:'$40 PCP',oop:'$5,100 of $7,500 remaining',prior:'Required for surgery',notes:'HMO — referral required for specialists'},
+    'P-003':{status:'Terminated',deductible:'N/A',coinsurance:'N/A',copay:'N/A',oop:'N/A',prior:'N/A',notes:'⚠️ Coverage ended 2025-05-31. Do not bill to this payer.'},
+    'P-004':{status:'Active',deductible:'$240 — met ✅',coinsurance:'80/20',copay:'$0 primary care',oop:'Medicare statutory limits',prior:'Required for DME',notes:'Secondary: AARP Supplement Plan G'},
+    'P-005':{status:'Active',deductible:'$0',coinsurance:'Covered 100% in-network',copay:'$3 pharmacy',oop:'$0',prior:'PA required for brand drugs',notes:'Verify provider is enrolled in state Medicaid'},
+  };
+  const r=results[pid];
+  const isActive=r.status==='Active';
+  $('ins-result').innerHTML=`
+    <div class="section-title" style="margin-bottom:1rem">Verification result — ${p.name}</div>
+    <div class="alert ${isActive?'alert-success':'alert-error'}">${isActive?'✅ Eligible':'❌ Not eligible'} — ${p.ins} (${p.insId})</div>
+    ${Object.entries({Status:r.status,'Deductible':r.deductible,'Co-insurance':r.coinsurance,'Co-pay':r.copay,'Out-of-pocket':r.oop,'Prior auth':r.prior,'Notes':r.notes}).map(([k,v])=>`
+    <div style="display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--gray-50);font-size:13px">
+      <span style="color:var(--gray-600);font-weight:600">${k}</span>
+      <span style="text-align:right;max-width:55%">${v}</span>
+    </div>`).join('')}
+    <div style="margin-top:1rem;display:flex;gap:.6rem">
+      <button class="btn btn-blue btn-sm" onclick="addPoints(50)">✅ Mark verified (+50 pts)</button>
+      <button class="btn btn-outline btn-sm" onclick="navigate('claims')">→ Create claim</button>
+    </div>`;
+}
+
+// ── CLAIMS ────────────────────
+function renderClaims(){
+  state.claimStep=0;
+  $('page-body').innerHTML=`
+<div class="grid-2" style="margin-bottom:1.25rem">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Recent practice claims</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Claim #</th><th>Patient</th><th>DOS</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        ${[['C-2401','Margaret O\'Brien','06/10/25','$485.00','Paid'],['C-2399','James Rodriguez','06/08/25','$1,240.00','Pending'],['C-2388','Priya Patel','05/29/25','$320.00','Denied'],['C-2374','Robert Chang','05/15/25','$890.00','Paid'],['C-2361','Sandra Williams','05/02/25','$175.00','Appealed']].map(([id,name,dos,amt,st])=>`<tr>
+          <td style="font-family:monospace;font-size:13px;font-weight:600">${id}</td><td>${name}</td><td>${dos}</td><td style="font-weight:600">${amt}</td>
+          <td><span class="badge ${{'Paid':'badge-green','Pending':'badge-amber','Denied':'badge-red','Appealed':'badge-blue'}[st]}">${st}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Claim status breakdown</div>
+    <div class="chart-wrap"><canvas id="claimChart" role="img" aria-label="Donut chart of claim statuses: Paid, Pending, Denied, Appealed">Paid 60%, Pending 20%, Denied 15%, Appealed 5%.</canvas></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:.5rem;font-size:12px">
+      ${[['Paid','#1D9E75'],['Pending','#BA7517'],['Denied','#E24B4A'],['Appealed','#378ADD']].map(([l,c])=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${c};display:inline-block"></span>${l}</span>`).join('')}
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem">Create new practice claim</div>
+  <div class="step-indicator">
+    ${['Patient','Insurance','Services','Review'].map((s,i)=>`${i>0?`<div class="step-line ${i<=state.claimStep?'done':''}"></div>`:''}
+    <div class="step ${i<state.claimStep?'done':i===state.claimStep?'current':''}">${i<state.claimStep?'✓':i+1}</div>
+    <span style="font-size:12px;font-weight:600;color:${i===state.claimStep?'var(--blue-600)':'var(--gray-400)'}">${s}</span>`).join('')}
+  </div>
+  <div id="claim-step-body">${renderClaimStep(0)}</div>
+</div>`;
+  setTimeout(()=>{
+    state.charts.claim=new Chart($('claimChart'),{type:'doughnut',data:{datasets:[{data:[60,20,15,5],backgroundColor:['#1D9E75','#BA7517','#E24B4A','#378ADD'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}});
+  },100);
+}
+function renderClaimStep(step){
+  if(step===0)return`<div class="claim-form">
+    <div class="form-row"><div class="form-group"><label>Patient</label><select>${patients.map(p=>`<option>${p.name}</option>`).join('')}</select></div><div class="form-group"><label>Date of service</label><input type="date" value="2025-06-18"></div></div>
+    <div class="form-row"><div class="form-group"><label>Provider NPI</label><input value="1234567890"></div><div class="form-group"><label>Rendering provider</label><input value="Dr. Sarah Mitchell, MD"></div></div>
+    <div class="form-row"><div class="form-group"><label>Place of service</label><select><option>11 — Office</option><option>21 — Inpatient Hospital</option><option>23 — ER</option><option>22 — Outpatient Hospital</option></select></div><div class="form-group"><label>Accident related?</label><select><option>No</option><option>Auto accident</option><option>Work injury</option></select></div></div>
+    <button class="btn btn-blue" onclick="nextClaimStep()">Continue →</button></div>`;
+  if(step===1)return`<div class="claim-form">
+    <div class="form-row"><div class="form-group"><label>Primary payer</label><select><option>BlueCross PPO</option><option>United Healthcare</option><option>Medicare Part B</option><option>Aetna HMO</option></select></div><div class="form-group"><label>Insurance ID / Member #</label><input value="BCB-887741"></div></div>
+    <div class="form-row"><div class="form-group"><label>Group number</label><input value="GRP-44521"></div><div class="form-group"><label>Subscriber relationship</label><select><option>Self</option><option>Spouse</option><option>Child</option></select></div></div>
+    <div class="form-row"><div class="form-group"><label>Secondary payer (if any)</label><input placeholder="Leave blank if none"></div><div class="form-group"><label>Authorization #</label><input placeholder="If required"></div></div>
+    <div style="display:flex;gap:.6rem"><button class="btn btn-outline" onclick="prevClaimStep()">← Back</button><button class="btn btn-blue" onclick="nextClaimStep()">Continue →</button></div></div>`;
+  if(step===2)return`<div class="claim-form">
+    <div class="alert alert-info">Enter diagnosis codes first, then add procedure lines.</div>
+    <div class="form-row"><div class="form-group"><label>ICD-10 Dx A (primary)</label><input value="E11.9 — Type 2 diabetes without complications"></div><div class="form-group"><label>ICD-10 Dx B</label><input placeholder="Optional secondary diagnosis"></div></div>
+    <div style="border:1px solid var(--gray-100);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem">
+      <table style="width:100%;font-size:13px"><thead><tr><th>CPT code</th><th>Description</th><th>Units</th><th>Dx pointer</th><th>Charge</th><th></th></tr></thead>
+      <tbody id="service-lines">
+        <tr id="svc-1"><td><input style="width:80px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" value="99213"></td><td><input style="width:100%;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" value="Office visit, established patient"></td><td><input style="width:50px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px;text-align:center" value="1"></td><td><input style="width:60px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px;text-align:center" value="A"></td><td><input style="width:80px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" value="$175.00"></td><td><button style="background:none;border:none;color:var(--red-400);cursor:pointer;font-size:16px">×</button></td></tr>
+      </tbody></table>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="addServiceLine()">+ Add service line</button>
+    <div style="margin-top:1rem;display:flex;gap:.6rem"><button class="btn btn-outline" onclick="prevClaimStep()">← Back</button><button class="btn btn-blue" onclick="nextClaimStep()">Review claim →</button></div></div>`;
+  if(step===3)return`<div>
+    <div class="alert alert-success">✅ Claim ready for submission! Review details below.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+      ${[['Patient','Margaret O\'Brien'],['Insurance','BlueCross PPO'],['DOS','June 18, 2025'],['Provider','Dr. Sarah Mitchell'],['ICD-10','E11.9'],['CPT','99213'],['Total charge','$175.00'],['Claim type','Professional (CMS-1500)']].map(([k,v])=>`<div style="padding:.5rem;background:var(--gray-50);border-radius:var(--radius)"><div style="font-size:11px;color:var(--gray-400);font-weight:700;text-transform:uppercase">${k}</div><div style="font-size:14px;font-weight:600;margin-top:.1rem">${v}</div></div>`).join('')}
+    </div>
+    <div style="display:flex;gap:.6rem"><button class="btn btn-outline" onclick="prevClaimStep()">← Edit</button><button class="btn btn-green" onclick="submitClaim()">🚀 Submit claim (+100 pts)</button></div></div>`;
+}
+let svcCount=1;
+function addServiceLine(){svcCount++;const tb=document.getElementById('service-lines');const tr=document.createElement('tr');tr.innerHTML=`<td><input style="width:80px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" placeholder="CPT"></td><td><input style="width:100%;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" placeholder="Description"></td><td><input style="width:50px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px;text-align:center" value="1"></td><td><input style="width:60px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px;text-align:center" value="A"></td><td><input style="width:80px;padding:.3rem .5rem;border:1px solid var(--gray-100);border-radius:4px;font-size:12px" placeholder="$0.00"></td><td><button style="background:none;border:none;color:var(--red-400);cursor:pointer;font-size:16px" onclick="this.closest('tr').remove()">×</button></td>`;tb.appendChild(tr);}
+function nextClaimStep(){if(state.claimStep<3){state.claimStep++;$('claim-step-body').innerHTML=renderClaimStep(state.claimStep);document.querySelectorAll('.step').forEach((s,i)=>{s.className='step '+(i<state.claimStep?'done':i===state.claimStep?'current':'');s.textContent=i<state.claimStep?'✓':i+1;});document.querySelectorAll('.step-line').forEach((l,i)=>l.classList.toggle('done',i<state.claimStep));}}
+function prevClaimStep(){if(state.claimStep>0){state.claimStep--;$('claim-step-body').innerHTML=renderClaimStep(state.claimStep);document.querySelectorAll('.step').forEach((s,i)=>{s.className='step '+(i<state.claimStep?'done':i===state.claimStep?'current':'');s.textContent=i<state.claimStep?'✓':i+1;});document.querySelectorAll('.step-line').forEach((l,i)=>l.classList.toggle('done',i<state.claimStep));}}
+function submitClaim(){addPoints(100);$('claim-step-body').innerHTML=`<div class="alert alert-success" style="font-size:15px">🎉 Claim C-2402 submitted successfully! +100 points earned.</div><button class="btn btn-outline" onclick="renderClaims()">← Back to claims</button>`;}
+
+// ── ICD-10 ────────────────────
+const icd10Codes=[
+  {code:'E11.9',cat:'Endocrine',desc:'Type 2 diabetes mellitus without complications',tips:'Use when no specific complication is documented'},
+  {code:'I10',cat:'Cardiovascular',desc:'Essential (primary) hypertension',tips:'Do not use for secondary hypertension — use I15.x instead'},
+  {code:'M54.5',cat:'Musculoskeletal',desc:'Low back pain',tips:'Unspecified; use more specific codes when laterality or cause known'},
+  {code:'J06.9',cat:'Respiratory',desc:'Acute upper respiratory infection, unspecified',tips:'Use for common cold when no specific pathogen identified'},
+  {code:'F41.1',cat:'Mental Health',desc:'Generalized anxiety disorder',tips:'Requires clinical documentation meeting DSM-5 criteria'},
+  {code:'Z00.00',cat:'Screening',desc:'Encounter for general adult medical exam without abnormal findings',tips:'Annual wellness visit; pairs with preventive medicine CPT codes'},
+  {code:'J45.20',cat:'Respiratory',desc:'Mild intermittent asthma, uncomplicated',tips:'Must specify severity and type; never use unspecified when status known'},
+  {code:'K21.0',cat:'Digestive',desc:'Gastro-esophageal reflux with esophagitis',tips:'If reflux without esophagitis, use K21.9'},
+  {code:'N18.3',cat:'Genitourinary',desc:'Chronic kidney disease, stage 3 (moderate)',tips:'Always code the underlying cause (e.g., diabetic nephropathy) first'},
+  {code:'G47.33',cat:'Neurological',desc:'Obstructive sleep apnea (adult)',tips:'If using CPAP, add Z99.89 for dependence on enabling machine'},
+];
+function renderICD10(){renderCodePage('icd10','ICD-10',icd10Codes);}
+
+// ── CPT ───────────────────────
+const cptCodes=[
+  {code:'99213',cat:'E&M',desc:'Office or outpatient visit, established patient — low complexity',tips:'Document MDM: 2 of 3 elements or total time ≥20 min'},
+  {code:'99214',cat:'E&M',desc:'Office or outpatient visit, established patient — moderate complexity',tips:'Requires documentation of moderate MDM or ≥30 minutes total time'},
+  {code:'93000',cat:'Cardiology',desc:'Electrocardiogram, routine ECG with at least 12 leads',tips:'Includes interpretation and report; do not bill 93010 and 93005 separately when performing both'},
+  {code:'85025',cat:'Lab',desc:'Blood count; complete (CBC), automated and differential WBC count',tips:'Order-based; clinical documentation must support medical necessity'},
+  {code:'80053',cat:'Lab',desc:'Comprehensive metabolic panel',tips:'14 tests included; cannot unbundle individual components'},
+  {code:'36415',cat:'Procedure',desc:'Collection of venous blood by venipuncture',tips:'Typically bundled with lab tests; check payer policy before billing separately'},
+  {code:'99396',cat:'Preventive',desc:'Preventive medicine services, established patient, 40–64 years',tips:'Pair with Z00.00 ICD-10; do not bill E&M separately unless separate problem addressed'},
+  {code:'71046',cat:'Radiology',desc:'Radiologic exam, chest; 2 views',tips:'Interpretation only if performed by billing provider; technical component uses modifier TC'},
+  {code:'99291',cat:'Critical Care',desc:'Critical care, evaluation and management of critically ill; first 30–74 min',tips:'Must document total critical care time; separate from procedure time'},
+  {code:'43239',cat:'GI',desc:'Esophagoscopy, flexible; with biopsy, single or multiple',tips:'Facility and professional components often billed separately'},
+];
+function renderCPT(){renderCodePage('cpt','CPT',cptCodes);}
+
+function renderCodePage(type,label,codes){
+  const cats=[...new Set(codes.map(c=>c.cat))];
+  $('page-body').innerHTML=`
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="section-header">
+    <div class="section-title">${label} code search & practice</div>
+    <button class="btn btn-outline btn-sm" onclick="addPoints(25);this.textContent='✅ +25 pts!'">Practice quiz</button>
+  </div>
+  <div class="code-search-box"><span class="search-icon">🔍</span><input placeholder="Search by code or description..." oninput="filterCodes('${type}',this.value)"></div>
+  <div style="margin-bottom:.75rem">${cats.map(c=>`<span class="pill" onclick="filterByCategory('${type}','${c}',this)">${c}</span>`).join('')}</div>
+  <div id="${type}-results">${renderCodeResults(codes)}</div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:.75rem">Coding tips</div>
+  <div class="grid-3">
+    ${[['🎯 Specificity','Always use the most specific code available. Unspecified codes may cause denials or audit flags.'],['📋 Documentation','Every code must be supported by clinical documentation. Code what is documented, not what is assumed.'],['🔗 Sequencing','For ICD-10: primary diagnosis first, then secondary. Complications before the underlying disease in some cases.']].map(([t,d])=>`<div style="padding:.9rem;background:var(--blue-50);border-radius:var(--radius);border-left:3px solid var(--blue-400)"><div style="font-weight:700;margin-bottom:.3rem;font-size:13px">${t}</div><div style="font-size:12.5px;color:var(--gray-600)">${d}</div></div>`).join('')}
+  </div>
+</div>`;
+}
+function renderCodeResults(codes){
+  return codes.map(c=>`<div class="code-result" onclick="toggleCode(this)">
+    <div class="code-result-header"><span class="code-id">${c.code}</span><span class="badge badge-blue">${c.cat}</span></div>
+    <div class="code-desc">${c.desc}</div>
+    <div class="code-tip" style="display:none;margin-top:.5rem;padding:.5rem;background:var(--amber-50);border-radius:4px;font-size:12px;color:var(--amber-600)">💡 ${c.tips}</div>
+  </div>`).join('');
+}
+function toggleCode(el){const tip=el.querySelector('.code-tip');tip.style.display=tip.style.display==='none'?'block':'none';}
+function filterCodes(type,q){const src=type==='icd10'?icd10Codes:cptCodes;const filtered=src.filter(c=>c.code.toLowerCase().includes(q.toLowerCase())||c.desc.toLowerCase().includes(q.toLowerCase()));$(`${type}-results`).innerHTML=renderCodeResults(filtered);}
+function filterByCategory(type,cat,el){document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');const src=type==='icd10'?icd10Codes:cptCodes;const filtered=src.filter(c=>c.cat===cat);$(`${type}-results`).innerHTML=renderCodeResults(filtered);}
+
+// ── PAYMENT ───────────────────
+function renderPayment(){
+  $('page-body').innerHTML=`
+<div class="alert alert-info">📄 Post payments from the Explanation of Benefits (EOB) below. Match payments to claims accurately.</div>
+<div class="grid-2" style="margin-bottom:1.25rem">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">EOB — BlueCross #EOB-2024-8811</div>
+    <div style="font-size:12px;color:var(--gray-400);margin-bottom:.75rem">Check #44221 · EFT posted June 15, 2025</div>
+    <div class="table-wrap"><table style="font-size:12.5px">
+      <thead><tr><th>Claim</th><th>Billed</th><th>Allowed</th><th>Paid</th><th>Adj reason</th></tr></thead>
+      <tbody>
+        ${[['C-2401','$485.00','$310.00','$248.00','CO-45: Contractual adj.'],['C-2388','$320.00','$280.00','$0.00','CO-97: Auth required'],['C-2399','$1,240.00','$1,100.00','$880.00','CO-45 + PR-2 Deductible']].map(([id,b,a,p,r])=>`<tr><td style="font-family:monospace;font-weight:600">${id}</td><td>${b}</td><td>${a}</td><td style="font-weight:700;color:${p==='$0.00'?'var(--red-400)':'var(--teal-600)'}">${p}</td><td style="font-size:11px;color:var(--gray-600)">${r}</td></tr>`).join('')}
+      </tbody>
+    </table></div>
+    <div style="margin-top:.75rem;padding:.6rem;background:var(--blue-50);border-radius:var(--radius);font-size:13px"><strong>Total check:</strong> $1,128.00</div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Post payment</div>
+    <div class="form-group" style="margin-bottom:.75rem"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Claim number</label>
+      <select style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" id="post-claim"><option>C-2401</option><option>C-2388</option><option>C-2399</option></select></div>
+    <div class="form-group" style="margin-bottom:.75rem"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Payment amount</label>
+      <input type="text" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" id="post-amount" value="$248.00"></div>
+    <div class="form-group" style="margin-bottom:.75rem"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Adjustment reason</label>
+      <select style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none"><option>CO-45 Contractual adj.</option><option>CO-97 Auth required</option><option>PR-2 Deductible</option><option>PR-3 Co-pay</option><option>CO-4 Late filing</option></select></div>
+    <div class="form-group" style="margin-bottom:1rem"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Patient responsibility</label>
+      <input type="text" style="width:100%;padding:.5rem .75rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" value="$62.00"></div>
+    <button class="btn btn-blue" onclick="postPayment()">Post payment (+75 pts)</button>
+  </div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:.75rem">Payment log</div>
+  <div id="payment-log">
+    ${[['C-2401','BlueCross','$248.00','$62.00','June 15','Posted'],['C-2374','Medicare','$712.00','$0.00','June 10','Posted'],['C-2361','Medicaid','$175.00','$0.00','June 5','Posted']].map(([claim,pay,amt,pr,dt,st])=>`
+    <div class="payment-row">
+      <div><div style="font-size:12px;color:var(--gray-400)">Claim</div><div style="font-family:monospace;font-weight:700;font-size:13px">${claim}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-400)">Payer</div><div style="font-size:13px">${pay}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-400)">Paid</div><div style="font-weight:700;color:var(--teal-600);font-size:14px">${amt}</div></div>
+      <div><div style="font-size:12px;color:var(--gray-400)">Pt. resp.</div><div style="font-size:13px">${pr}</div></div>
+      <span class="badge badge-green">${st}</span>
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+function postPayment(){addPoints(75);$('page-body').insertAdjacentHTML('afterbegin','<div class="alert alert-success">✅ Payment posted to claim $('post-claim').value — +75 points! Patient responsibility flagged for statement generation.</div>');}
+
+// ── DENIALS ───────────────────
+function renderDenials(){
+  $('page-body').innerHTML=`
+<div class="grid-4" style="margin-bottom:1.25rem">
+  <div class="card stat-card"><div class="stat-label">Open denials</div><div class="stat-value" style="color:var(--red-400)">8</div></div>
+  <div class="card stat-card"><div class="stat-label">Appealed</div><div class="stat-value" style="color:var(--amber-400)">3</div></div>
+  <div class="card stat-card"><div class="stat-label">Resolved</div><div class="stat-value" style="color:var(--teal-400)">12</div></div>
+  <div class="card stat-card"><div class="stat-label">Appeal success</div><div class="stat-value" style="color:var(--blue-600)">78%</div></div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem">Active denial queue</div>
+  ${[
+    {claim:'C-2388',patient:'Priya Patel',code:'CO-97',reason:'Service requires prior authorization',action:'Submit auth + appeal letter',resolved:false},
+    {claim:'C-2350',patient:'Robert Chang',code:'CO-4',reason:'Late filing — claim submitted beyond timely filing limit',action:'Provide proof of timely filing',resolved:false},
+    {claim:'C-2340',patient:'Sandra Williams',code:'CO-11',reason:'Diagnosis inconsistent with procedure',action:'Review DX-CPT pairing; rebill with corrected code',resolved:false},
+    {claim:'C-2315',patient:'Margaret O\'Brien',code:'CO-22',reason:'This care may be covered by another payer',action:'Coordinate benefits; bill primary first',resolved:false},
+    {claim:'C-2288',patient:'James Rodriguez',code:'PR-96',reason:'Non-covered charge — not medically necessary',action:'Submit medical necessity documentation',resolved:true},
+  ].map(d=>`
+  <div class="denial-item ${d.resolved?'resolved':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem">
+          <span style="font-family:monospace;font-weight:700;font-size:14px">${d.claim}</span>
+          <span class="badge badge-gray">${d.patient}</span>
+          <span class="badge ${d.resolved?'badge-green':'badge-red'}">${d.code}</span>
+        </div>
+        <div style="font-size:13.5px;font-weight:600;color:var(--gray-800);margin-bottom:.25rem">${d.reason}</div>
+        <div style="font-size:12.5px;color:var(--gray-600)">📌 Recommended action: ${d.action}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-shrink:0">
+        ${d.resolved?'<span class="badge badge-green">✅ Resolved</span>':`<button class="btn btn-amber btn-sm" onclick="addPoints(80);this.closest('.denial-item').classList.add('resolved');this.closest('.denial-item').querySelector('.badge-red').className='badge badge-green';this.closest('div[style]').innerHTML='<span class=\\'badge badge-green\\'>✅ Resolved +80 pts</span>'">Appeal</button>`}
+      </div>
+    </div>
+  </div>`).join('')}
+</div>
+<div class="card" style="margin-top:1.25rem">
+  <div class="section-title" style="margin-bottom:1rem">Common denial codes reference</div>
+  <div class="table-wrap"><table><thead><tr><th>Code</th><th>Category</th><th>Meaning</th><th>Resolution</th></tr></thead><tbody>
+    ${[['CO-4','Contractual','Late filing — claim past timely filing limit','Proof of timely filing; prevent by tracking deadlines'],['CO-11','Contractual','Diagnosis inconsistent with procedure','Review coding; ensure DX supports CPT medical necessity'],['CO-22','Contractual','COB — other payer may be primary','Bill primary payer first; include EOB with secondary claim'],['CO-45','Contractual','Contractual adjustment — write-off required','Post as contractual adj; do not balance-bill PPO patients'],['CO-97','Contractual','Payment bundled per NCCI; or auth required','Appeal with auth or review NCCI edit; use modifier if appropriate'],['PR-1','Patient resp.','Deductible not met','Send patient statement for deductible amount'],['PR-2','Patient resp.','Co-insurance patient responsibility','Bill patient for co-insurance portion'],['PR-96','Patient resp.','Non-covered service','Inform patient; ABN form required for Medicare']].map(r=>`<tr>${r.map((c,i)=>`<td style="${i===0?'font-family:monospace;font-weight:700;color:var(--red-600)':i===2?'font-size:13px':''}">${c}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>
+</div>`;
+}
+
+// ── TERMINOLOGY ───────────────
+const terms=[
+  {t:'Accounts Receivable (AR)',d:'Money owed to a healthcare provider for services rendered but not yet paid. Tracked by age: 0–30, 31–60, 61–90, 91–120, 120+ days.'},
+  {t:'Allowed Amount',d:'The maximum amount a payer agrees to pay for a covered service. Difference between billed and allowed is the contractual adjustment (CO-45).'},
+  {t:'Assignment of Benefits',d:'Patient authorizes the provider to receive insurance payments directly. Without this, payment goes to the patient.'},
+  {t:'Authorization / Prior Auth',d:'Approval required from the insurer before certain services are performed. Without it, the claim may be denied with code CO-97.'},
+  {t:'Bundling',d:'When two or more procedures are grouped under one code. NCCI edits prevent separate billing of services that should be bundled.'},
+  {t:'Clean Claim',d:'A claim with no errors that can be processed without additional information. Goal: first-pass resolution rate.'},
+  {t:'COB (Coordination of Benefits)',d:'Process for determining which payer is primary when a patient has multiple insurance policies. Prevents double payment.'},
+  {t:'Copay',d:'Fixed amount a patient pays per visit (e.g., $30). Collected at time of service.'},
+  {t:'Deductible',d:'Amount the patient pays out-of-pocket each year before insurance begins paying. Does not apply to all services (e.g., preventive care under ACA).'},
+  {t:'EOB (Explanation of Benefits)',d:'Document from the payer explaining how a claim was processed: billed, allowed, paid, and patient responsibility amounts.'},
+  {t:'Modifier',d:'2-digit code appended to a CPT code to provide additional information without changing the code\'s definition. Examples: -25, -51, -TC, -26.'},
+  {t:'NCCI Edits',d:'National Correct Coding Initiative edits — CMS rules preventing unbundling of procedures that should be billed together.'},
+  {t:'NPI (National Provider Identifier)',d:'10-digit unique identifier for healthcare providers. Required on all claims. Individual (Type 1) vs. organizational (Type 2).'},
+  {t:'Place of Service (POS)',d:'2-digit code indicating where service was performed. Common codes: 11 Office, 21 Inpatient, 22 Outpatient, 23 ER.'},
+  {t:'Remittance Advice (RA)',d:'Electronic or paper report from the payer accompanying a payment, listing how each claim was adjudicated.'},
+  {t:'Upcoding',d:'Fraudulent practice of billing a higher-level code than actually provided. Illegal under the False Claims Act.'},
+];
+function renderTerminology(){
+  $('page-body').innerHTML=`
+<div class="card" style="margin-bottom:1.25rem">
+  <div class="section-header"><div class="section-title">Glossary of medical billing terms</div><span class="badge badge-blue">${terms.length} terms</span></div>
+  <input style="width:100%;padding:.6rem 1rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:14px;outline:none;margin-bottom:1rem" placeholder="🔍 Filter terms..." oninput="filterTerms(this.value)">
+  <div id="terms-list">${renderTermList(terms)}</div>
+</div>`;
+}
+function renderTermList(list){return list.map(t=>`<div class="term-card" onclick="this.classList.toggle('open')"><div class="term-title">${t.t}</div><div class="term-body">${t.d}</div></div>`).join('');}
+function filterTerms(q){$('terms-list').innerHTML=renderTermList(terms.filter(t=>(t.t+t.d).toLowerCase().includes(q.toLowerCase())));}
+
+// ── QUIZ ──────────────────────
+const quizzes={
+  'ICD-10 Basics':[
+    {q:'What ICD-10 code represents Type 2 diabetes without complications?',opts:['E11.9','E10.9','E13.9','E11.0'],ans:0,exp:'E11 = Type 2 diabetes. E10 = Type 1. The .9 suffix means without complications.'},
+    {q:'Which code is used for essential (primary) hypertension?',opts:['I15.0','I10','I50.9','I20.9'],ans:1,exp:'I10 is the standard code for primary hypertension. I15.x codes are for secondary hypertension.'},
+    {q:'A patient presents with a routine annual physical exam with no findings. Which code applies?',opts:['Z00.01','Z00.00','Z01.00','Z13.9'],ans:1,exp:'Z00.00 = General adult exam without abnormal findings. Z00.01 = Same exam WITH abnormal findings.'},
+    {q:'In ICD-10 sequencing, which diagnosis should generally be listed first?',opts:['Chronic condition','Symptom only','Primary reason for the encounter','Most expensive diagnosis'],ans:2,exp:'Per Official Guidelines: the principal/first-listed diagnosis is the condition established after study to be chiefly responsible for the encounter.'},
+    {q:'What does "unspecified" mean in ICD-10 coding?',opts:['The provider doesn\'t know the diagnosis','Documentation does not specify a more precise diagnosis','The code is incorrect','The diagnosis is excluded'],ans:1,exp:'"Unspecified" is appropriate when the medical record doesn\'t contain sufficient detail for a more specific code — not a guess.'},
+  ],
+  'Insurance & Billing':[
+    {q:'What does COB stand for?',opts:['Claim on Billing','Coordination of Benefits','Code of Billing','Certificate of Benefit'],ans:1,exp:'COB = Coordination of Benefits. Determines primary vs secondary payer when patient has multiple insurances.'},
+    {q:'A CO-45 adjustment code means:',opts:['Claim filed late','Prior auth required','Contractual obligation — write-off required','Duplicate claim'],ans:2,exp:'CO-45 = Charge exceeds contracted/allowed amount. This is a contractual write-off; patients in a PPO cannot be balance-billed for this amount.'},
+    {q:'Which document does the payer send to explain payment decisions on a claim?',opts:['ABN','EOB','NPI','POS'],ans:1,exp:'EOB = Explanation of Benefits. It details billed, allowed, paid, and patient responsibility amounts for each claim.'},
+    {q:'What is the timely filing limit for Medicare Part B claims?',opts:['90 days','180 days','1 year from DOS','2 years from DOS'],ans:2,exp:'Medicare requires claims within 12 months (1 year) from the date of service. Most private payers require 180 days.'},
+    {q:'Which modifier is used to indicate a significant, separately identifiable E&M service on the same day as a procedure?',opts:['-51','-25','-59','-TC'],ans:1,exp:'Modifier -25 appended to the E&M code signals it was a significant, separate service from the procedure billed on the same day.'},
+  ],
+  'Revenue Cycle':[
+    {q:'What is the goal of a clean claim?',opts:['Fastest denial','No errors; processable without additional info','Lowest billed amount','Smallest patient balance'],ans:1,exp:'A clean claim has no errors or omissions. Clean claims get paid faster and improve the first-pass resolution rate (FPRR).'},
+    {q:'AR aging tracks unpaid balances in which time buckets?',opts:['Weekly','0-30, 31-60, 61-90, 91-120, 120+ days','Monthly','Quarterly'],ans:1,exp:'Standard AR aging buckets: 0-30, 31-60, 61-90, 91-120, and 120+ days. Older AR is harder to collect.'},
+    {q:'Upcoding is:',opts:['A coding shortcut','Billing a higher code than performed — fraudulent','Adding modifiers','Correcting a claim'],ans:1,exp:'Upcoding = billing for a higher-level service than was actually provided. It is healthcare fraud under the False Claims Act.'},
+  ]
+};
+function renderQuiz(){
+  const qNames=Object.keys(quizzes);
+  $('page-body').innerHTML=`
+<div class="grid-3" style="margin-bottom:1.25rem">
+  ${qNames.map((name,i)=>`<div class="card" style="cursor:pointer;transition:all .2s;border:2px solid var(--gray-100)" onmouseover="this.style.borderColor='var(--blue-200)'" onmouseout="this.style.borderColor='var(--gray-100)'" onclick="startQuiz('${name}')">
+    <div style="font-size:24px;margin-bottom:.5rem">${['🔬','🛡️','💰'][i]}</div>
+    <div style="font-weight:700;font-size:14px;margin-bottom:.25rem">${name}</div>
+    <div style="font-size:12px;color:var(--gray-400);margin-bottom:.75rem">${quizzes[name].length} questions · ~5 min</div>
+    <button class="btn btn-blue btn-sm" style="width:100%;justify-content:center">Start quiz →</button>
+  </div>`).join('')}
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem">Quiz history</div>
+  <div class="table-wrap"><table><thead><tr><th>Quiz</th><th>Score</th><th>Date</th><th>Status</th></tr></thead><tbody>
+    ${[['ICD-10 Basics','92%','Jun 12, 2025','Passed'],['Insurance & Billing','78%','Jun 5, 2025','Passed'],['Revenue Cycle','85%','May 28, 2025','Passed'],['ICD-10 Basics','65%','May 20, 2025','Retake available']].map(([q,s,d,st])=>`<tr><td style="font-weight:600">${q}</td><td style="font-weight:700;color:${parseInt(s)>=80?'var(--teal-600)':'var(--amber-600)'}">${s}</td><td>${d}</td><td><span class="badge ${st==='Passed'?'badge-green':'badge-amber'}">${st}</span></td></tr>`).join('')}
+  </tbody></table></div>
+</div>`;
+}
+let currentQuiz=[];let currentQ=0;let quizScore=0;let quizName='';
+function startQuiz(name){
+  quizName=name;currentQ=0;quizScore=0;
+  currentQuiz=quizzes[name];
+  renderQuestion();
+}
+function renderQuestion(){
+  const q=currentQuiz[currentQ];
+  $('page-body').innerHTML=`
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+    <div class="section-title">${quizName}</div>
+    <span class="badge badge-blue">Q ${currentQ+1} of ${currentQuiz.length}</span>
+  </div>
+  <div class="progress-bar" style="margin-bottom:1.25rem"><div class="progress-fill" style="width:${(currentQ/currentQuiz.length)*100}%"></div></div>
+  <div style="font-size:16px;font-weight:600;color:var(--blue-900);margin-bottom:1.25rem;line-height:1.5">${q.q}</div>
+  <div id="quiz-opts">${q.opts.map((o,i)=>`<div class="quiz-option" onclick="selectAnswer(${i})">${String.fromCharCode(65+i)}. ${o}</div>`).join('')}</div>
+  <div id="quiz-feedback" style="display:none"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem">
+    <button class="btn btn-outline" onclick="renderQuiz()">← Exit quiz</button>
+    <div style="font-size:13px;color:var(--gray-400)">Score: ${quizScore}/${currentQ} correct</div>
+    <button class="btn btn-blue hidden" id="next-btn" onclick="nextQuestion()">Next question →</button>
+  </div>
+</div>`;
+}
+function selectAnswer(idx){
+  const q=currentQuiz[currentQ];
+  const opts=document.querySelectorAll('.quiz-option');
+  opts.forEach(o=>o.style.pointerEvents='none');
+  if(idx===q.ans){quizScore++;opts[idx].classList.add('correct');addPoints(20);}
+  else{opts[idx].classList.add('wrong');opts[q.ans].classList.add('correct');}
+  $('quiz-feedback').style.display='block';
+  $('quiz-feedback').innerHTML=`<div class="alert ${idx===q.ans?'alert-success':'alert-error'}">${idx===q.ans?'✅ Correct! +20 pts':'❌ Incorrect.'} ${q.exp}</div>`;
+  $('next-btn').classList.remove('hidden');
+}
+function nextQuestion(){
+  currentQ++;
+  if(currentQ>=currentQuiz.length){showQuizResults();}else{renderQuestion();}
+}
+function showQuizResults(){
+  const pct=Math.round((quizScore/currentQuiz.length)*100);
+  const passed=pct>=70;
+  if(passed)addPoints(100);
+  $('page-body').innerHTML=`
+<div class="card" style="text-align:center;padding:2.5rem">
+  <div style="font-size:48px;margin-bottom:.75rem">${passed?'🎉':'📚'}</div>
+  <div style="font-size:28px;font-weight:800;color:${passed?'var(--teal-600)':'var(--amber-600)'};margin-bottom:.25rem">${pct}%</div>
+  <div style="font-size:16px;font-weight:600;color:var(--blue-900);margin-bottom:.5rem">${passed?'Passed!':'Keep studying'}</div>
+  <div style="font-size:14px;color:var(--gray-400);margin-bottom:1.5rem">You got ${quizScore} of ${currentQuiz.length} questions correct${passed?' — great work!':'. Review the material and try again.'}</div>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+    <button class="btn btn-blue" onclick="startQuiz(quizName)">Retry quiz</button>
+    <button class="btn btn-outline" onclick="renderQuiz()">← All quizzes</button>
+    ${passed?`<button class="btn btn-green" onclick="navigate('certificates')">🏆 View certificate</button>`:''}
+  </div>
+  ${passed?`<div class="alert alert-success" style="margin-top:1.5rem;text-align:left">+100 bonus points earned for passing! Your certificate is ready.</div>`:''}
+</div>`;
+}
+
+// ── REPORTS ───────────────────
+function renderReports(){
+  $('page-body').innerHTML=`
+<div class="grid-4" style="margin-bottom:1.25rem">
+  <div class="card stat-card"><div class="stat-label">Total study time</div><div class="stat-value" style="color:var(--blue-600)">42h</div><div class="stat-delta up">This month</div></div>
+  <div class="card stat-card"><div class="stat-label">Exercises done</div><div class="stat-value" style="color:var(--teal-400)">87</div><div class="stat-delta up">↑ 12 vs last month</div></div>
+  <div class="card stat-card"><div class="stat-label">Avg quiz score</div><div class="stat-value" style="color:var(--amber-400)">86%</div></div>
+  <div class="card stat-card"><div class="stat-label">Modules complete</div><div class="stat-value" style="color:var(--blue-600)">6/10</div></div>
+</div>
+<div class="grid-2">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Monthly quiz scores</div>
+    <div class="chart-wrap-lg"><canvas id="scoreChart" role="img" aria-label="Line chart of monthly quiz scores from January to June">Jan 72, Feb 75, Mar 80, Apr 83, May 84, Jun 86 percent.</canvas></div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:.75rem">Module performance</div>
+    <div class="chart-wrap-lg"><canvas id="modChart" role="img" aria-label="Horizontal bar chart of scores by billing module">Scores vary from 30 to 90 percent.</canvas></div>
+  </div>
+</div>
+<div class="card">
+  <div class="section-header"><div class="section-title">Detailed activity log</div><button class="btn btn-outline btn-sm">⬇ Export CSV</button></div>
+  <div class="table-wrap"><table><thead><tr><th>Date</th><th>Activity</th><th>Module</th><th>Score / Points</th><th>Time spent</th></tr></thead><tbody>
+    ${[['Jun 18','Practice claim C-2402','Claim Creation','+100 pts','25 min'],['Jun 17','Quiz: ICD-10 Basics','ICD-10 Coding','92% · +120 pts','18 min'],['Jun 16','Insurance verification x3','Insurance Verification','+150 pts','30 min'],['Jun 15','Denial resolution x2','Denial Management','+160 pts','22 min'],['Jun 14','EOB posting exercise','Payment Posting','+75 pts','15 min'],['Jun 13','Terminology study','Medical Terminology','+50 pts','45 min']].map(([d,a,m,s,t])=>`<tr><td style="font-size:13px;color:var(--gray-400)">${d}</td><td style="font-weight:600">${a}</td><td><span class="badge badge-blue">${m}</span></td><td style="font-weight:700;color:var(--teal-600)">${s}</td><td style="font-size:13px;color:var(--gray-400)">${t}</td></tr>`).join('')}
+  </tbody></table></div>
+</div>`;
+  setTimeout(()=>{
+    state.charts.score=new Chart($('scoreChart'),{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Avg score',data:[72,75,80,83,84,86],borderColor:'#185FA5',backgroundColor:'rgba(55,138,221,.1)',fill:true,tension:.4,pointBackgroundColor:'#185FA5',borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:60,max:100,grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}}});
+    state.charts.mod=new Chart($('modChart'),{type:'bar',data:{labels:['ICD-10','Patients','Insurance','CPT','Claims','Payments','Denials'],datasets:[{label:'Score',data:[90,85,70,75,60,45,30],backgroundColor:['#1D9E75','#1D9E75','#378ADD','#378ADD','#BA7517','#E24B4A','#E24B4A'],borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{min:0,max:100,grid:{color:'rgba(0,0,0,.04)'}},y:{grid:{display:false}}}}});
+  },100);
+}
+
+// ── CERTIFICATES ──────────────
+function renderCertificates(){
+  $('page-body').innerHTML=`
+<div class="grid-2" style="margin-bottom:1.25rem">
+  <div>
+    <div class="cert-wrapper">
+      <div class="cert-title">Certificate of completion</div>
+      <div style="font-size:14px;color:var(--gray-400);margin-bottom:1rem">This certifies that</div>
+      <div class="cert-name">${state.user.name}</div>
+      <div class="cert-course">has successfully completed</div>
+      <div style="font-size:18px;font-weight:800;color:var(--blue-600);margin-bottom:.5rem">ICD-10 Coding Fundamentals</div>
+      <div class="cert-seal">🏆</div>
+      <div style="font-size:13px;color:var(--gray-400)">Score: 92% · June 17, 2025</div>
+      <div style="margin-top:1.25rem;display:flex;gap:.6rem;justify-content:center">
+        <button class="btn btn-blue btn-sm" onclick="addPoints(0);alert('Certificate download simulation — in production, a PDF would be generated.')">⬇ Download PDF</button>
+        <button class="btn btn-outline btn-sm">🔗 Share</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="margin-bottom:1rem">Earned certificates</div>
+    ${[['ICD-10 Coding Fundamentals','Jun 17, 2025','92%',true],['Insurance Verification Basics','Jun 5, 2025','85%',true],['Revenue Cycle Overview','May 28, 2025','78%',true],['Medical Terminology 101','In progress','—',false]].map(([name,date,score,done])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--gray-50)">
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <span style="font-size:24px">${done?'🏆':'🔒'}</span>
+        <div><div style="font-size:13.5px;font-weight:600">${name}</div><div style="font-size:12px;color:var(--gray-400)">${date} ${score!=='—'?'· Score: '+score:''}</div></div>
+      </div>
+      ${done?'<button class="btn btn-outline btn-sm">⬇ PDF</button>':'<span class="badge badge-gray">Locked</span>'}
+    </div>`).join('')}
+  </div>
+</div>
+<div class="card">
+  <div class="section-title" style="margin-bottom:1rem">Achievements & badges</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1rem">
+    ${[['🔬','ICD-10 Explorer','Searched 50+ codes',true],['⭐','First Claim','Submitted first claim',true],['🔥','7-Day Streak','7 days in a row',true],['🎯','Perfect Score','100% on a quiz',false],['💳','Payment Pro','Posted 10 payments',false],['🚫','Denial Slayer','Resolved 15 denials',false],['🏥','Full Cycle','Completed all modules',false],['🎓','Graduate','Passed final assessment',false]].map(([icon,name,desc,earned])=>`
+    <div class="achievement-badge ${earned?'earned':'locked'}">
+      <div class="badge-icon">${icon}</div>
+      <div class="badge-name">${name}</div>
+      <div class="badge-desc">${desc}</div>
+      ${earned?'<span class="badge badge-green" style="font-size:10px">Earned</span>':'<span class="badge badge-gray" style="font-size:10px">Locked</span>'}
+    </div>`).join('')}
+  </div>
+</div>`;
+}
+
+// ── ADMIN ─────────────────────
+function renderAdmin(){
+  if(state.user.role!=='admin'){$('page-body').innerHTML=`<div class="alert alert-error">❌ Admin access required. Please log in as an administrator.</div>`;return;}
+  $('page-body').innerHTML=`
+<div class="alert alert-warning">⚙️ Administrator view — manage all portal content and students.</div>
+<div class="tab-nav">
+  ${['Students','Courses','Quizzes','ICD-10 DB','CPT DB','Reports'].map((t,i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="adminTab(this,'${t}')">${t}</button>`).join('')}
+</div>
+<div id="admin-tab-content">${renderAdminStudents()}</div>`;
+}
+function adminTab(btn,tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const r={Students:renderAdminStudents,Courses:renderAdminCourses,Quizzes:renderAdminQuizzes,'ICD-10 DB':renderAdminICD,'CPT DB':renderAdminCPT,Reports:renderAdminReports};
+  $('admin-tab-content').innerHTML=(r[tab]||renderAdminStudents)();
+}
+function renderAdminStudents(){return`<div class="card"><div class="section-header"><div class="section-title">Student roster</div><div style="display:flex;gap:.5rem"><input style="padding:.4rem .75rem;border:1px solid var(--gray-100);border-radius:var(--radius);font-size:13px;outline:none" placeholder="Search..."><button class="btn btn-blue btn-sm">+ Add student</button></div></div><div class="table-wrap"><table><thead><tr><th>Student</th><th>Email</th><th>Program</th><th>Progress</th><th>Last active</th><th>Status</th><th>Actions</th></tr></thead><tbody>${[['Alex Johnson','alex@email.com','HIM Program','62%','Today','Active'],['Maria Santos','msantos@email.com','Medical Billing Cert','88%','Yesterday','Active'],['David Kim','dkim@email.com','CPC Prep','41%','3 days ago','Active'],['Fatima Al-Rashid','fatima@email.com','HIM Program','95%','Today','Active'],['Carlos Rivera','crivera@email.com','Revenue Cycle','15%','2 weeks ago','Inactive']].map(([n,e,p,prog,la,st])=>`<tr><td style="font-weight:600">${n}</td><td style="font-size:13px">${e}</td><td>${p}</td><td><div style="display:flex;align-items:center;gap:.5rem"><div class="progress-bar" style="width:80px;margin:0"><div class="progress-fill green" style="width:${prog}"></div></div><span style="font-size:12px;font-weight:700">${prog}</span></div></td><td style="font-size:13px;color:var(--gray-400)">${la}</td><td><span class="badge ${st==='Active'?'badge-green':'badge-gray'}">${st}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-red btn-sm" style="padding:.3rem .6rem;font-size:12px">Remove</button></td></tr>`).join('')}</tbody></table></div></div>`;}
+function renderAdminCourses(){return`<div class="card"><div class="section-header"><div class="section-title">Course management</div><button class="btn btn-blue btn-sm">+ New course</button></div><div class="table-wrap"><table><thead><tr><th>Course</th><th>Modules</th><th>Enrolled</th><th>Avg score</th><th>Status</th><th>Actions</th></tr></thead><tbody>${[['ICD-10 Coding Fundamentals','8','42','84%','Published'],['CPT Procedure Coding','6','38','79%','Published'],['Revenue Cycle Management','10','35','77%','Published'],['Insurance Verification Pro','5','28','82%','Draft'],['Medical Billing Compliance','7','0','—','Draft']].map(([c,m,e,a,s])=>`<tr><td style="font-weight:600">${c}</td><td style="text-align:center">${m}</td><td style="text-align:center">${e}</td><td style="font-weight:700;color:var(--teal-600)">${a}</td><td><span class="badge ${s==='Published'?'badge-green':'badge-amber'}">${s}</span></td><td style="display:flex;gap:.3rem"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-blue btn-sm" style="font-size:12px">Publish</button></td></tr>`).join('')}</tbody></table></div></div>`;}
+function renderAdminQuizzes(){return`<div class="card"><div class="section-header"><div class="section-title">Quiz management</div><button class="btn btn-blue btn-sm">+ New quiz</button></div><div class="table-wrap"><table><thead><tr><th>Quiz title</th><th>Questions</th><th>Pass mark</th><th>Attempts</th><th>Pass rate</th><th>Actions</th></tr></thead><tbody>${[['ICD-10 Basics','5','70%','127','78%'],['Insurance & Billing','5','70%','98','82%'],['Revenue Cycle','3','70%','64','71%'],['CPT Coding','10','75%','12','67%'],['Final Assessment','25','80%','5','60%']].map(([t,q,p,a,pr])=>`<tr><td style="font-weight:600">${t}</td><td style="text-align:center">${q}</td><td>${p}</td><td>${a}</td><td style="font-weight:700;color:${parseInt(pr)>=75?'var(--teal-600)':'var(--amber-600)'}">${pr}</td><td style="display:flex;gap:.3rem"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-amber btn-sm" style="font-size:12px">Preview</button></td></tr>`).join('')}</tbody></table></div></div>`;}
+function renderAdminICD(){return`<div class="card"><div class="section-header"><div class="section-title">ICD-10 code database <span class="admin-tag">Admin</span></div><div style="display:flex;gap:.5rem"><input style="padding:.4rem .75rem;border:1px solid var(--gray-100);border-radius:var(--radius);font-size:13px;outline:none" placeholder="Search codes..."><button class="btn btn-blue btn-sm">+ Add code</button></div></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>Category</th><th>Description</th><th>Tips</th><th>Actions</th></tr></thead><tbody>${icd10Codes.map(c=>`<tr><td style="font-family:monospace;font-weight:700;color:var(--blue-600)">${c.code}</td><td><span class="badge badge-blue">${c.cat}</span></td><td style="font-size:13px;max-width:200px">${c.desc}</td><td style="font-size:12px;color:var(--gray-400);max-width:180px">${c.tips}</td><td style="display:flex;gap:.3rem"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-red btn-sm" style="padding:.3rem .5rem;font-size:12px">Del</button></td></tr>`).join('')}</tbody></table></div></div>`;}
+function renderAdminCPT(){return`<div class="card"><div class="section-header"><div class="section-title">CPT code database <span class="admin-tag">Admin</span></div><div style="display:flex;gap:.5rem"><input style="padding:.4rem .75rem;border:1px solid var(--gray-100);border-radius:var(--radius);font-size:13px;outline:none" placeholder="Search codes..."><button class="btn btn-blue btn-sm">+ Add code</button></div></div><div class="table-wrap"><table><thead><tr><th>Code</th><th>Category</th><th>Description</th><th>Actions</th></tr></thead><tbody>${cptCodes.map(c=>`<tr><td style="font-family:monospace;font-weight:700;color:var(--teal-600)">${c.code}</td><td><span class="badge badge-green">${c.cat}</span></td><td style="font-size:13px;max-width:280px">${c.desc}</td><td style="display:flex;gap:.3rem"><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-red btn-sm" style="padding:.3rem .5rem;font-size:12px">Del</button></td></tr>`).join('')}</tbody></table></div></div>`;}
+function renderAdminReports(){return`<div class="grid-4" style="margin-bottom:1.25rem"><div class="card stat-card"><div class="stat-label">Total students</div><div class="stat-value" style="color:var(--blue-600)">5</div></div><div class="card stat-card"><div class="stat-label">Active today</div><div class="stat-value" style="color:var(--teal-400)">3</div></div><div class="card stat-card"><div class="stat-label">Certs issued</div><div class="stat-value" style="color:var(--amber-400)">12</div></div><div class="card stat-card"><div class="stat-label">Avg completion</div><div class="stat-value" style="color:var(--blue-600)">60%</div></div></div><div class="card"><div class="section-title" style="margin-bottom:.75rem">Cohort performance summary</div><div class="table-wrap"><table><thead><tr><th>Student</th><th>Completion</th><th>Avg score</th><th>Points</th><th>Certs</th><th>Status</th></tr></thead><tbody>${[['Alex Johnson','62%','86%','1,250','3','On track'],['Maria Santos','88%','91%','2,400','5','Excellent'],['David Kim','41%','74%','780','1','At risk'],['Fatima Al-Rashid','95%','94%','3,100','6','Excellent'],['Carlos Rivera','15%','61%','210','0','At risk']].map(([n,c,a,p,cert,st])=>`<tr><td style="font-weight:600">${n}</td><td>${c}</td><td style="font-weight:700;color:${parseInt(a)>=80?'var(--teal-600)':'var(--amber-600)'}">${a}</td><td>${p}</td><td>${cert}</td><td><span class="badge ${st==='Excellent'?'badge-green':st==='On track'?'badge-blue':'badge-red'}">${st}</span></td></tr>`).join('')}</tbody></table></div><div style="margin-top:1rem;display:flex;gap:.6rem"><button class="btn btn-outline btn-sm">⬇ Export report</button><button class="btn btn-blue btn-sm">📧 Email to admin</button></div></div>`;}
+
+// ── MODALS ────────────────────
+function openModal(type,id){
+  let html='';
+  if(type==='new-patient'){html=`<div class="modal-header"><div class="modal-title">Add practice patient</div><button class="modal-close" onclick="closeModal()">×</button></div><div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Full name</label><input style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none" placeholder="Patient name"></div><div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Date of birth</label><input type="date" style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none"></div><div class="form-group"><label style="font-size:12px;font-weight:600;color:var(--gray-600)">Insurance plan</label><select style="width:100%;padding:.55rem .8rem;border:1.5px solid var(--gray-100);border-radius:var(--radius);font-size:13.5px;outline:none"><option>BlueCross PPO</option><option>United Healthcare</option><option>Medicare Part B</option><option>Aetna HMO</option><option>Medicaid</option></select></div><button class="btn btn-blue" onclick="closeModal();addPoints(30)">Save patient (+30 pts)</button>`;}
+  if(type==='patient-detail'){const p=patients.find(x=>x.id===id);html=`<div class="modal-header"><div class="modal-title">${p.name}</div><button class="modal-close" onclick="closeModal()">×</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">${[['Patient ID',p.id],['DOB',p.dob],['Insurance',p.ins],['Insurance ID',p.insId],['Primary Dx',p.dx],['Status',p.status]].map(([k,v])=>`<div style="padding:.5rem;background:var(--gray-50);border-radius:var(--radius)"><div style="font-size:11px;color:var(--gray-400);font-weight:700">${k}</div><div style="font-size:14px;font-weight:600">${v}</div></div>`).join('')}</div><div style="display:flex;gap:.6rem"><button class="btn btn-blue" onclick="navigate('insurance')">Verify insurance</button><button class="btn btn-outline" onclick="navigate('claims')">Create claim</button></div>`;}
+  $('modal-content').innerHTML=html;
+  $('modal-overlay').classList.remove('hidden');
+}
+function closeModal(){$('modal-overlay').classList.add('hidden');}
+$('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── POINTS ────────────────────
+function addPoints(n){
+  state.user.points+=n;
+  $('points-badge').textContent=`⭐ ${state.user.points.toLocaleString()} pts`;
+  if(n>0){
+    const toast=document.createElement('div');
+    toast.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--teal-400);color:white;padding:.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:14px;z-index:999;animation:none';
+    toast.textContent=`+${n} pts earned!`;
+    document.body.appendChild(toast);
+    setTimeout(()=>toast.remove(),2500);
+  }
+}
+</script>
+</body>
+</html>
