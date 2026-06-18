@@ -37,6 +37,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1
 .btn-primary{width:100%;padding:.75rem;background:var(--blue-600);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
 .btn-primary:hover{background:var(--blue-800)}
 .auth-demo{margin-top:1rem;padding:.75rem;background:var(--blue-50);border-radius:var(--radius);font-size:12px;color:var(--blue-800);text-align:center}
+.auth-error{background:var(--red-50);color:var(--red-600);padding:.75rem;border-radius:var(--radius);font-size:13px;border:1px solid #F7C1C1;margin-bottom:1rem;display:none}
+.auth-success{background:var(--teal-50);color:var(--teal-600);padding:.75rem;border-radius:var(--radius);font-size:13px;border:1px solid var(--teal-100);margin-bottom:1rem;display:none}
 
 /* ── APP SHELL ── */
 #app{display:none;min-height:600px}
@@ -244,13 +246,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <div class="auth-logo-icon">🏥</div>
     <div class="auth-logo-text">MedBill<span>Academy</span></div>
   </div>
+  
+  <!-- Error & Success Messages -->
+  <div id="auth-error" class="auth-error"></div>
+  <div id="auth-success" class="auth-success"></div>
+  
   <div class="auth-tabs">
     <div class="auth-tab active" onclick="switchAuth('login')">Sign In</div>
     <div class="auth-tab" onclick="switchAuth('register')">Register</div>
   </div>
   <div id="login-form">
-    <div class="form-group"><label>Email address</label><input type="email" id="login-email" value="student@medbill.edu" placeholder="you@example.com"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="login-pass" value="••••••••" placeholder="Password"></div>
+    <div class="form-group"><label>Email address</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="Password"></div>
     <div class="form-group">
       <label>Login as</label>
       <select id="login-role">
@@ -259,14 +266,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       </select>
     </div>
     <button class="btn-primary" onclick="doLogin()">Sign in to portal</button>
-    <div class="auth-demo">Demo credentials are pre-filled. Click sign in to enter.</div>
+    <div class="auth-demo">Demo: student@medbill.edu / password123<br>Admin: admin@medbill.edu / admin123</div>
   </div>
   <div id="register-form" style="display:none">
-    <div class="form-group"><label>Full name</label><input type="text" placeholder="Alex Johnson"></div>
-    <div class="form-group"><label>Email</label><input type="email" placeholder="alex@example.com"></div>
-    <div class="form-group"><label>Program / School</label><input type="text" placeholder="Community College of Health Sciences"></div>
-    <div class="form-group"><label>Password</label><input type="password" placeholder="Min 8 characters"></div>
-    <button class="btn-primary" onclick="doLogin()">Create account</button>
+    <div class="form-group"><label>Full name</label><input type="text" id="reg-name" placeholder="Full name"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="email@example.com"></div>
+    <div class="form-group"><label>Program / School</label><input type="text" id="reg-program" placeholder="Your program or school"></div>
+    <div class="form-group"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 8 characters"></div>
+    <div class="form-group"><label>Confirm Password</label><input type="password" id="reg-pass-confirm" placeholder="Confirm password"></div>
+    <button class="btn-primary" onclick="doRegister()">Create account</button>
   </div>
 </div>
 </div>
@@ -340,34 +348,205 @@ const state = {
   currentPage:'dashboard',
   quizState:{q:0,score:0,answered:false},
   claimStep:0,
-  charts:{}
+  charts:{},
+  registeredUsers: [] // Store registered users
 };
 
 function $(id){return document.getElementById(id)}
 
-// ── AUTH ──────────────────────
+// ── AUTH FUNCTIONS ──────────────
+
+function showAuthError(message) {
+  const el = $('auth-error');
+  el.textContent = '❌ ' + message;
+  el.style.display = 'block';
+  $('auth-success').style.display = 'none';
+}
+
+function showAuthSuccess(message) {
+  const el = $('auth-success');
+  el.textContent = '✅ ' + message;
+  el.style.display = 'block';
+  $('auth-error').style.display = 'none';
+}
+
+function clearAuthMessages() {
+  $('auth-error').style.display = 'none';
+  $('auth-success').style.display = 'none';
+}
+
 function switchAuth(tab){
+  clearAuthMessages();
   document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',['login','register'][i]===tab));
   $('login-form').style.display=tab==='login'?'':'none';
   $('register-form').style.display=tab==='register'?'':'none';
 }
+
 function doLogin(){
-  const role=$('login-role')?$('login-role').value:'student';
-  state.user.role=role;
-  if(role==='admin'){state.user.name='Dr. Admin';state.user.avatar='DA';}
-  $('auth-screen').style.display='none';
-  $('app').style.display='block';
-  $('user-name').textContent=state.user.name;
-  $('user-avatar').textContent=state.user.avatar;
-  $('user-role-label').textContent=role==='admin'?'Administrator':'Student';
-  if(role==='admin'){
-    document.querySelectorAll('.admin-nav').forEach(e=>e.classList.remove('hidden'));
+  clearAuthMessages();
+  
+  const email = $('login-email').value.trim();
+  const password = $('login-pass').value.trim();
+  const role = $('login-role').value;
+  
+  // Validation
+  if (!email) {
+    showAuthError('Please enter your email address.');
+    return;
   }
+  if (!email.includes('@') || !email.includes('.')) {
+    showAuthError('Please enter a valid email address.');
+    return;
+  }
+  if (!password) {
+    showAuthError('Please enter your password.');
+    return;
+  }
+  if (password.length < 6) {
+    showAuthError('Password must be at least 6 characters long.');
+    return;
+  }
+  
+  // Check registered users
+  const registeredUser = state.registeredUsers.find(u => u.email === email);
+  
+  // Admin login
+  if (email === 'admin@medbill.edu' && password === 'admin123') {
+    state.user.role = 'admin';
+    state.user.name = 'Dr. Admin';
+    state.user.avatar = 'DA';
+    showAuthSuccess('Welcome back, Administrator!');
+    setTimeout(enterApp, 600);
+    return;
+  }
+  
+  // Check registered users
+  if (registeredUser) {
+    if (registeredUser.password !== password) {
+      showAuthError('Incorrect password. Please try again.');
+      return;
+    }
+    state.user.name = registeredUser.name;
+    state.user.role = 'student';
+    const initials = registeredUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    state.user.avatar = initials || 'ST';
+    state.user.points = registeredUser.points || 1250;
+    showAuthSuccess('Welcome back, ' + registeredUser.name + '!');
+    setTimeout(enterApp, 600);
+    return;
+  }
+  
+  // Demo login
+  if (email === 'student@medbill.edu' && password === 'password123') {
+    state.user.role = 'student';
+    state.user.name = 'Alex Johnson';
+    state.user.avatar = 'AJ';
+    state.user.points = 1250;
+    showAuthSuccess('Welcome back, Alex!');
+    setTimeout(enterApp, 600);
+    return;
+  }
+  
+  showAuthError('No account found with this email. Please register first or use demo credentials.');
+}
+
+function doRegister(){
+  clearAuthMessages();
+  
+  const name = $('reg-name').value.trim();
+  const email = $('reg-email').value.trim();
+  const program = $('reg-program').value.trim();
+  const password = $('reg-pass').value;
+  const confirmPass = $('reg-pass-confirm').value;
+  
+  // Validation
+  if (!name) {
+    showAuthError('Please enter your full name.');
+    return;
+  }
+  if (!email) {
+    showAuthError('Please enter your email address.');
+    return;
+  }
+  if (!email.includes('@') || !email.includes('.')) {
+    showAuthError('Please enter a valid email address.');
+    return;
+  }
+  if (!program) {
+    showAuthError('Please enter your program or school.');
+    return;
+  }
+  if (!password) {
+    showAuthError('Please choose a password.');
+    return;
+  }
+  if (password.length < 8) {
+    showAuthError('Password must be at least 8 characters long.');
+    return;
+  }
+  if (password !== confirmPass) {
+    showAuthError('Passwords do not match. Please try again.');
+    return;
+  }
+  
+  // Check if email already registered
+  if (state.registeredUsers.find(u => u.email === email)) {
+    showAuthError('This email is already registered. Please login instead.');
+    return;
+  }
+  
+  // Register user
+  state.registeredUsers.push({
+    name: name,
+    email: email,
+    program: program,
+    password: password,
+    points: 0
+  });
+  
+  showAuthSuccess('Account created successfully! Please login.');
+  
+  // Auto switch to login form after 1.5 seconds
+  setTimeout(() => {
+    clearAuthMessages();
+    switchAuth('login');
+    $('login-email').value = email;
+    $('login-pass').value = password;
+    showAuthSuccess('Account created! You can now login.');
+  }, 1500);
+}
+
+function enterApp() {
+  $('auth-screen').style.display = 'none';
+  $('app').style.display = 'block';
+  
+  // Update user info
+  $('user-name').textContent = state.user.name;
+  $('user-avatar').textContent = state.user.avatar;
+  $('user-role-label').textContent = state.user.role === 'admin' ? 'Administrator' : 'Student';
+  
+  if (state.user.role === 'admin') {
+    document.querySelectorAll('.admin-nav').forEach(e => e.classList.remove('hidden'));
+  }
+  
+  $('points-badge').textContent = `⭐ ${state.user.points.toLocaleString()} pts`;
   navigate('dashboard');
 }
+
 function doLogout(){
+  clearAuthMessages();
   $('app').style.display='none';
   $('auth-screen').style.display='flex';
+  // Reset forms
+  $('login-email').value = '';
+  $('login-pass').value = '';
+  $('reg-name').value = '';
+  $('reg-email').value = '';
+  $('reg-program').value = '';
+  $('reg-pass').value = '';
+  $('reg-pass-confirm').value = '';
+  // Reset nav items
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
 }
 
 // ── NAVIGATION ────────────────
@@ -408,7 +587,7 @@ function navigate(page){
 }
 
 // ══════════════════════════════
-//  PAGE RENDERERS
+//  PAGE RENDERERS (ALL ORIGINAL CODE BELOW - UNCHANGED)
 // ══════════════════════════════
 function renderDashboard(){
   $('page-body').innerHTML=`
@@ -1058,6 +1237,17 @@ function addPoints(n){
     setTimeout(()=>toast.remove(),2500);
   }
 }
+
+// Keyboard support for login/register
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if ($('login-form').style.display !== 'none') {
+      doLogin();
+    } else if ($('register-form').style.display !== 'none') {
+      doRegister();
+    }
+  }
+});
 </script>
 </body>
 </html>
