@@ -407,7 +407,7 @@ function doLogin(){
     return;
   }
   
-  // Check registered users
+  // Check registered users first
   const registeredUser = state.registeredUsers.find(u => u.email === email);
   
   // Admin login
@@ -415,6 +415,7 @@ function doLogin(){
     state.user.role = 'admin';
     state.user.name = 'Dr. Admin';
     state.user.avatar = 'DA';
+    state.user.points = 5000;
     showAuthSuccess('Welcome back, Administrator!');
     setTimeout(enterApp, 600);
     return;
@@ -527,6 +528,8 @@ function enterApp() {
   
   if (state.user.role === 'admin') {
     document.querySelectorAll('.admin-nav').forEach(e => e.classList.remove('hidden'));
+  } else {
+    document.querySelectorAll('.admin-nav').forEach(e => e.classList.add('hidden'));
   }
   
   $('points-badge').textContent = `⭐ ${state.user.points.toLocaleString()} pts`;
@@ -1238,7 +1241,7 @@ function addPoints(n){
   }
 }
 
-// Keyboard support for login/register
+// ── KEYBOARD SUPPORT ──────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     if ($('login-form').style.display !== 'none') {
